@@ -54,8 +54,7 @@ def DownloadFile(url,savePath):
         url = url.strip()
         savePath = savePath.strip()
         
-        r = urllib2.Request(url)
-        req = urllib2.urlopen(r)
+        req = urllib2.urlopen(url, timeout = 60)
 
         saveFile = open(savePath, 'wb')
         saveFile.write(req.read())
@@ -63,7 +62,8 @@ def DownloadFile(url,savePath):
         saveFile.close()
         req.close()
     except:
-        log("DOWNLOAD FAILED-->" + savePath)
+        msg = "DOWNLOAD FAILED:" + "-->" + savePath
+        log(msg)
         
 
 
