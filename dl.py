@@ -5,6 +5,13 @@ import os
 import urllib2
 import traceback
 import time
+import argparse
+
+parser = argparse.ArgumentParser(description='Download or combine the downloaded files.')
+parser.add_argument('-c', dest='check_combine', action='store_const',
+                    const=1, default=0,
+                    help='Combine the downloaded files.')
+args = parser.parse_args()
 
 def findfile(rootdir, func, out):
   ls = os.listdir(rootdir)
@@ -35,8 +42,8 @@ def get_ts_names(m3u8file):
   return ret
 
 def callcmd(cmd):
-  print 'run cmd:' + cmd
-  #os.system(cmd)
+  #print 'run cmd:' + cmd
+  os.system(cmd)
 
 
 def log(msg):
@@ -55,16 +62,18 @@ def DownloadFile(url,savePath):
         savePath = savePath.strip()
         
         req = urllib2.urlopen(url, timeout = 60)
-
-        saveFile = open(savePath, 'wb')
-        saveFile.write(req.read())
-
-        saveFile.close()
+        b = req.read()
         req.close()
+        saveFile = open(savePath, 'wb')
+        saveFile.write(b)
+        saveFile.close()
     except:
         msg = "DOWNLOAD FAILED:" + "-->" + savePath
         log(msg)
         
+def CombineFile(fromfile, tofile):
+  cmd = "cat '" + fromfile + "' >> '" + tofile + "'"
+  callcmd(cmd)
 
 
 global show_process_maxlen
@@ -90,12 +99,25 @@ for line in allfile:
     allts.append(path)
 
 
-curPos =0;
-for ts in allts:
-  curPos+=1
-  (path, name) = os.path.split(ts)
-  HOST = 'http://media.XXXXXXX.org/'
-  url = HOST+name
-  show_process(curPos, len(allts), url + " --> " + path)
-  DownloadFile(url, ts)
+
+
+if args.check_combine:
+  print 'Begin combining .mp4 files...'
+  curPos =0;
+  for ts in allts:
+    curPos+=1
+    (path, name) = os.path.split(ts)
+    mp4name = path + ".mp4"
+    show_process(curPos, len(allts), ts + " --> " + mp4name)
+    CombineFile(ts, mp4name)
+else:
+  print "Begin downloading..."
+  curPos =0;
+  for ts in allts:
+    curPos+=1
+    (path, name) = os.path.split(ts)
+    HOST = 'http://media.XXXXXXX.org/'
+    url = HOST+name
+    show_process(curPos, len(allts), url + " --> " + path)
+    DownloadFile(url, ts)
 
