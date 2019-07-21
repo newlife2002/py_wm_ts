@@ -11,6 +11,10 @@ parser = argparse.ArgumentParser(description='Download or combine the downloaded
 parser.add_argument('-c', dest='check_combine', action='store_const',
                     const=1, default=0,
                     help='Combine the downloaded files.')
+parser.add_argument('-t', dest='test_files', action='store_const',
+                    const=1, default=0,
+                    help='Test the downloaded files.')
+
 args = parser.parse_args()
 
 def findfile(rootdir, func, out):
@@ -54,6 +58,12 @@ def log(msg):
       msg += ' '
   sys.stdout.write(msg + "\n")
   sys.stdout.flush()
+
+
+def CheckDownloadedFile(url, savePath):
+  if not os.path.exists(savePath):
+    msg = "DOWNLOAD FAILED:" + "-->" + savePath
+    log(msg)
 
 
 def DownloadFile(url,savePath):
@@ -119,5 +129,8 @@ else:
     HOST = 'http://media.XXXXXXX.org/'
     url = HOST+name
     show_process(curPos, len(allts), url + " --> " + path)
-    DownloadFile(url, ts)
+    if args.test_files:
+      CheckDownloadedFile(url, ts)
+    else:
+      DownloadFile(url, ts)
 
