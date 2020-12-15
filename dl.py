@@ -6,6 +6,7 @@ import urllib2
 import traceback
 import time
 import argparse
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='Download or combine the downloaded files.')
 parser.add_argument('-c', dest='check_combine', action='store_const',
@@ -71,14 +72,21 @@ def DownloadFile(url,savePath):
         url = url.strip()
         savePath = savePath.strip()
         
-        req = urllib2.urlopen(url, timeout = 60)
+        req0 = urllib2.Request(url)
+        req0.add_header('Referer', 'https://www.XXXXXXX.org/')
+        req=urllib2.urlopen(req0,timeout=60)
         b = req.read()
         req.close()
         saveFile = open(savePath, 'wb')
         saveFile.write(b)
         saveFile.close()
+    except urllib2.URLError as e:
+      if hasattr(e, 'code'):
+        print "Url: %s\t%s" % (url,e.code)
+      elif hasattr(e, 'reason'):
+        print "Url: %s\t%s" % (url,'error')
     except:
-        msg = "DOWNLOAD FAILED:" + "-->" + savePath
+        msg = "DOWNLOAD FAILED:" + url + "-->" + savePath
         log(msg)
         
 def CombineFile(fromfile, tofile):
@@ -113,22 +121,20 @@ for line in allfile:
 
 if args.check_combine:
   print 'Begin combining .mp4 files...'
-  curPos =0;
-  for ts in allts:
-    curPos+=1
+  pbar = tqdm(allts, ncols = 70)
+  for ts in pbar:
     (path, name) = os.path.split(ts)
     mp4name = path + ".mp4"
-    show_process(curPos, len(allts), ts + " --> " + mp4name)
+    #pbar.set_description()
     CombineFile(ts, mp4name)
 else:
   print "Begin downloading..."
-  curPos =0;
-  for ts in allts:
-    curPos+=1
+  pbar = tqdm(allts, ncols = 70)
+  for ts in pbar:
     (path, name) = os.path.split(ts)
     HOST = 'http://media.XXXXXXX.org/'
     url = HOST+name
-    show_process(curPos, len(allts), url + " --> " + path)
+    #pbar.set_description(url)
     if args.test_files:
       CheckDownloadedFile(url, ts)
     else:
